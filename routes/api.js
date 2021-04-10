@@ -1,28 +1,23 @@
 const express = require('express');
 const router = express.Router();
 
-const connnect = require('../config/sqlConfig');
+const connect = require('../config/sqlConfig');
 
 router.get('/', (req, res) => {
     res.json({message: "you hit the api route!"});
 });
 
-// this is the /api/users route handler
-router.get('/users', (req, res) => {
-
-    res.json({message: "all users route"})
-});
-
-
 //? this is the /api/movies route handler
 router.get('/movies', (req, res) => {
-    connnect.getConnection(function (err, connection) {
+    connect.getConnection(function (err, connection) {
 
         if (err) throw err;
 
         connection.query(
+            //"SELECT m.*, GROUP_CONCAT(g.genre_name) as genre_name FROM tbl_movies m NATURAL LEFT JOIN tbl_genre g NATURAL JOIN tbl_mov_genre GROUP BY m.movies_id",
 
-            'SELECT m.*,GROUP_CONCAT(g.genre_name) AS movie_genre FROM tbl_movies m '+
+            'SELECT m.*,GROUP_CONCAT(g.genre_name) AS movie_genre '+
+            'FROM tbl_movies m '+
             'LEFT JOIN tbl_mov_genre link ON link.movies_id = m.movies_id '+
             'LEFT JOIN tbl_genre g ON g.genre_id = link.genre_id '+
             'GROUP BY m.movies_id',
@@ -49,7 +44,7 @@ router.get('/movies', (req, res) => {
 // passing in via the route:: /api/movies/1, /api/movies/20
 router.get('/movies/:id', (req, res) => {
 
-    connnect.query(
+    connect.query(
 
         `SELECT * FROM tbl_movies WHERE movies_id=${req.params.id}`,
 
