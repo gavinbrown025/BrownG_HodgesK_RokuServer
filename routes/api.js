@@ -8,8 +8,6 @@ const connect = require('../config/sqlConfig');
 router.get('/movies', (req, res) => {
     connect.getConnection(function (err, connection) {
 
-        if (err) throw err;
-
         connection.query(
             //"SELECT m.*, GROUP_CONCAT(g.genre_name) as genre_name FROM tbl_movies m NATURAL LEFT JOIN tbl_genre g NATURAL JOIN tbl_mov_genre GROUP BY m.movies_id",
 
@@ -18,6 +16,33 @@ router.get('/movies', (req, res) => {
             'LEFT JOIN tbl_mov_genre link ON link.movies_id = m.movies_id '+
             'LEFT JOIN tbl_genre g ON g.genre_id = link.genre_id '+
             'GROUP BY m.movies_id',
+
+            function (error, results) {
+            connection.release();
+            if (error) throw error;
+
+            for (let object in results){
+                if (results[object].movie_genre){
+                    results[object].movie_genre = results[object].movie_genre.split(",");
+                }
+            }
+
+            res.json(results);
+        });
+    });
+
+});
+
+router.get('/movies/filter/:genre', (req, res) => {
+    connect.getConnection(function (err, connection) {
+
+        connection.query(
+            `SELECT m.*, GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name `+
+            `FROM tbl_movies m `+
+            `LEFT JOIN tbl_mov_genre link ON link.movies_id = m.movies_id `+
+            `LEFT JOIN tbl_genre g ON g.genre_id = link.genre_id `+
+            `WHERE g.genre_name LIKE "%${req.params.genre}%" `+
+            `GROUP BY m.movies_id`,
 
             function (error, results) {
             connection.release();
