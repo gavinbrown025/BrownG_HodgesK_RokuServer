@@ -5,17 +5,28 @@ const connect = require('../config/sqlConfig');
 
 
 //? this is the /api/movies route handler
-router.get('/movies', (req, res) => {
+router.get('/movies/:access', (req, res) => {
     connect.getConnection(function (err, connection) {
 
         connection.query(
-            //"SELECT m.*, GROUP_CONCAT(g.genre_name) as genre_name FROM tbl_movies m NATURAL LEFT JOIN tbl_genre g NATURAL JOIN tbl_mov_genre GROUP BY m.movies_id",
+            `SELECT m.*, `+
+            `GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name, `+
+            `a.arating_id AS movies_arating `+
 
-            'SELECT m.*,GROUP_CONCAT(g.genre_name) AS movie_genre '+
-            'FROM tbl_movies m '+
-            'LEFT JOIN tbl_mov_genre link ON link.movies_id = m.movies_id '+
-            'LEFT JOIN tbl_genre g ON g.genre_id = link.genre_id '+
-            'GROUP BY m.movies_id',
+            `FROM tbl_movies m `+
+
+            `LEFT JOIN tbl_mov_genre AS glink `+
+            `ON glink.movies_id = m.movies_id `+
+            `LEFT JOIN tbl_genre AS g `+
+            `ON g.genre_id = glink.genre_id `+
+
+            `LEFT JOIN tbl_mov_arating AS alink `+
+            `ON alink.movies_id = m.movies_id `+
+            `LEFT JOIN tbl_arating AS a `+
+            `ON a.arating_id = alink.arating_id `+
+
+            `WHERE a.arating_id <= ${req.params.access} `+
+            `GROUP BY m.movies_id`,
 
             function (error, results) {
             connection.release();
@@ -33,15 +44,28 @@ router.get('/movies', (req, res) => {
 
 });
 
-router.get('/movies/filter/:genre', (req, res) => {
+router.get('/movies/:access/:genre', (req, res) => {
     connect.getConnection(function (err, connection) {
 
         connection.query(
-            `SELECT m.*, GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name `+
+            `SELECT m.*, `+
+            `GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name, `+
+            `a.arating_id AS movies_arating `+
+
             `FROM tbl_movies m `+
-            `LEFT JOIN tbl_mov_genre link ON link.movies_id = m.movies_id `+
-            `LEFT JOIN tbl_genre g ON g.genre_id = link.genre_id `+
+
+            `LEFT JOIN tbl_mov_genre AS glink `+
+            `ON glink.movies_id = m.movies_id `+
+            `LEFT JOIN tbl_genre AS g `+
+            `ON g.genre_id = glink.genre_id `+
+
+            `LEFT JOIN tbl_mov_arating AS alink `+
+            `ON alink.movies_id = m.movies_id `+
+            `LEFT JOIN tbl_arating AS a `+
+            `ON a.arating_id = alink.arating_id `+
+
             `WHERE g.genre_name LIKE "%${req.params.genre}%" `+
+            `AND a.arating_id <= ${req.params.access} `+
             `GROUP BY m.movies_id`,
 
             function (error, results) {
@@ -63,7 +87,7 @@ router.get('/movies/filter/:genre', (req, res) => {
 
 // dynamic route handler that accepts a param (:id)
 // passing in via the route:: /api/movies/1, /api/movies/20
-router.get('/movies/:id', (req, res) => {
+router.get('/movies/select/:id', (req, res) => {
 
     connect.query(
 
