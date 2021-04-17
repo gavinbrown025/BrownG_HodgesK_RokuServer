@@ -34,7 +34,7 @@ router.post('/admin/signup', (req, res) => {
 
     (err, results) => {
         if (err) {
-            res.status(404).json({success:false, message: 'Hmm nope. Try again.'});
+            res.status(444).json({success:false, message: 'Hmm nope. Try again.'});
             console.log(err);
         } else {
             res.json({success:true, message: 'successfully created account'});
@@ -56,7 +56,6 @@ router.get('/admin/getusers/:account', (req, res) => {
 });
 
 router.post('/adduser', (req, res) => {
-    console.log(req.body);
     connect.query(
         `INSERT INTO tbl_user (user_fname, user_name, user_admin, user_access, user_avatar, account_id) `+
         `VALUES("${req.body.fname}", "${req.body.fname}", "${req.body.admin}", "${req.body.access}", "${req.body.avatar}", "${req.body.account}") `,
@@ -67,6 +66,26 @@ router.post('/adduser', (req, res) => {
             throw err;
         }else {
             res.status(200).json({success:true, message: 'Successfully added user'});
+        }
+    });
+});
+
+router.post('/edituser', (req, res) => {
+    connect.query(
+        `UPDATE tbl_user SET `+
+        `user_fname = "${req.body.fname}", `+
+        `user_name = "${req.body.fname}", `+
+        `user_admin = "${req.body.admin}", `+
+        `user_access = "${req.body.access}", `+
+        `user_avatar = "${req.body.avatar}" `+
+        `WHERE user_id = ${req.body.id}`,
+
+    (err, results) => {
+        if (err) {
+            res.status(444).json({message: `Something went wrong, try again.`})
+            throw err;
+        }else {
+            res.status(200).json({success:true, message: 'Successfully updated user'});
         }
     });
 });
