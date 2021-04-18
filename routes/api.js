@@ -8,7 +8,7 @@ router.get('/movies/:access', (req, res) => {
     connect.getConnection((err, connection) => {
         connection.query(
             `SELECT m.*, `+
-            `GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name, `+
+            `GROUP_CONCAT(DISTINCT g.genre_name) AS movies_genre, `+
             `a.arating_id AS movies_arating `+
 
             `FROM tbl_movies m `+
@@ -31,9 +31,7 @@ router.get('/movies/:access', (req, res) => {
                 if (error) throw error;
 
                 for (let object in results){
-                    if (results[object].movie_genre){
-                        results[object].movie_genre = results[object].movie_genre.split(",");
-                    }
+                    results[object].movies_genre = results[object].movies_genre.split(",");
                 }
 
                 res.json(results);
@@ -106,7 +104,7 @@ router.get('/movies/:access/:genre', (req, res) => {
     connect.getConnection((err, connection) => {
         connection.query(
             `SELECT m.*, `+
-            `GROUP_CONCAT(DISTINCT g.genre_name) AS genre_name, `+
+            `GROUP_CONCAT(DISTINCT g.genre_name) AS movies_genre, `+
             `a.arating_id AS movies_arating `+
 
             `FROM tbl_movies m `+
@@ -151,9 +149,6 @@ router.get('/getcomments/:id', (req, res) => {
             (error, results) => {
                 connection.release();
                 if (error) throw error,
-
-                console.log(results);
-
                 res.json(results);
             }
         )
@@ -180,6 +175,16 @@ router.post('/comment', (req, res) => {
     //         res.status(200).json({success:true, message: 'Successfully added user'});
     //     }
     // });
+});
+
+router.get('/genre', (req, res) => {
+    connect.query(
+        'SELECT * FROM tbl_genre',
+        function(err, results) {
+            if (err) throw err;
+            res.json(results);
+        }
+    );
 });
 
 
