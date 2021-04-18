@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const connect = require('../config/sqlConfig');
 
+router.use(express.json());
+router.use(express.urlencoded({extended: false}));
 
 //? this is the /api/movies route handler
 router.get('/movies/:access', (req, res) => {
@@ -141,40 +143,17 @@ router.get('/movies/:access/:genre', (req, res) => {
 });
 
 router.get('/getcomments/:id', (req, res) => {
-    connect.getConnection((err, connection) => {
-        connection.query(
+    connect.query(
+        `SELECT * FROM tbl_comments WHERE movies_id = ${req.params.id}`,
 
-            `SELECT * FROM tbl_comments WHERE movies_id = ${req.params.id}`,
-
-            (error, results) => {
-                connection.release();
-                if (error) throw error,
+        (error, results) => {
+            if(results[0]) {
                 res.json(results);
+            } else {
+                res.json({message: 'No commments'});
             }
-        )
-    });
-});
-
-
-router.post('/comment', (req, res) => {
-    console.log(req.body);
-
-    //! this is bullshit. Its exactly the same as adduser but with different names
-    //! theres no reason it shouldnt work. fuck this body undefined bullshit
-    //! I've rewrote it like 5 times It has to be a glitch at his point..
-
-    // connect.query(
-    //     `INSERT INTO tbl_comments (user_name, comment, movies_id, time) `+
-    //     `VALUES ("${req.body.name}","${req.body.comment}", "${req.body.movie}", now() )`,
-
-    // (err, results) => {
-    //     if (err) {
-    //         res.status(444).json({message: `Something went wrong, try again.`})
-    //         throw err;
-    //     }else {
-    //         res.status(200).json({success:true, message: 'Successfully added user'});
-    //     }
-    // });
+        }
+    )
 });
 
 router.get('/genre', (req, res) => {
@@ -185,6 +164,21 @@ router.get('/genre', (req, res) => {
             res.json(results);
         }
     );
+});
+
+router.post('/comment', (req, res) => {
+    connect.query(
+        `INSERT INTO tbl_comments (user_name, comment, movies_id, time) `+
+        `VALUES ("${req.body.name}","${req.body.comment}", "${req.body.movie}", now() )`,
+
+    (err, results) => {
+        if (err) {
+            res.status(444).json({message: `Something went wrong, try again.`})
+            throw err;
+        } else {
+            res.status(200).json({success:true, message: 'Comment posted'});
+        }
+    });
 });
 
 

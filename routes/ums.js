@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const connect = require('../config/sqlConfig');
 
-router.get('/', (req, res) => {
-    res.json({message: "you hit the UMS route!"});
-});
-
 router.use(express.json());
 router.use(express.urlencoded({extended: false}));
 
@@ -37,18 +33,18 @@ router.post('/admin/signup', (req, res) => {
             res.status(444).json({success:false, message: 'Hmm nope. Try again.'});
             console.log(err);
         } else {
-            res.json({success:true, message: 'successfully created account'});
+            res.json({success:true, message: 'Successfully Created Account'});
         }
     });
 });
 
 router.get('/admin/getusers/:account', (req, res) => {
     connect.query(
-        `SELECT user_id, user_name, user_fname, user_admin, user_access, user_avatar `+
+        `SELECT user_id, user_name, user_fname, user_admin, user_access, user_avatar, user_email `+
         `FROM tbl_user WHERE account_id =${req.params.account}`,
         function(err, results) {
         if (err) {
-            res.status(444).json({message: `failure`, status: `can't retrieve users`})
+            res.status(444).json({message: `failure`, status: `Can't retrieve users`})
             throw err;
         }
         res.status(200).json(results);
@@ -86,6 +82,22 @@ router.post('/edituser', (req, res) => {
             throw err;
         }else {
             res.status(200).json({success:true, message: 'Successfully updated user'});
+        }
+    });
+});
+
+router.post('/deleteuser', (req, res) => {
+    console.log(req.body.id);
+
+    connect.query(
+        `DELETE FROM tbl_user WHERE user_id = ${req.body.id}`,
+
+    (err, results) => {
+        if (err) {
+            res.status(444).json({message: `Something went wrong, try again.`})
+            throw err;
+        }else {
+            res.status(200).json({success:true, message: 'Successfully deleted user'});
         }
     });
 });
