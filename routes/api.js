@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const connect = require('../config/sqlConfig');
+const fs = require('fs');
 
 router.use(express.json());
 router.use(express.urlencoded({extended: false}));
@@ -40,8 +41,34 @@ router.get('/movies/:access', (req, res) => {
             }
         );
     });
-
 });
+
+//* stream movie by sending back chunks
+router.get('/movies/stream/:src', (req, res) => {
+    const range = req.headers.range //sent from html5 video El. put the fetch url in the src attr
+    !range && res.status(400).send('missing range header')
+
+    // get video stats
+    const videoPath = `./videos/${req.params.src}` //relative to server.js
+    const videoSize = fs.statSync(videoPath).size;
+
+    // parse range:
+    const CHUNK_SIZE = 10 ** 6; // 1MB
+    const start = Number(range.replace(/\D/g, "")) // take out all non-numbers in results
+    const end = Math.min(start + CHUNK_SIZE, videoSize - 1) // return Chunk unless remainder is smaller
+
+    const contentLength = end - start + 1
+    const headers = {
+        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": contentLength,
+        "Content-Type": "video/mp4",
+    }
+    res.writeHead(206, headers) // tells browser its partial content
+
+    const videoStream = fs.createReadStream(videoPath, {start, end})
+    videoStream.pipe(res)
+})
 
 // dynamic route handler that accepts a param (:id)
 // passing in via the route:: /api/movies/1, /api/movies/20

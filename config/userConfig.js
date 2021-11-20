@@ -5,7 +5,7 @@ const sqlCreds = {
     database: "heroku_951ec67d074ea59"
 }
 
-//! Development
+//! Development 
 // const sqlCreds = {
 //     user: "root",
 //     password: "",
