@@ -3,6 +3,9 @@ const app = express();
 
 const port = process.env.PORT || 5500;
 
+app.get('/', (req, res) => {
+	res.send('Spotify Server')
+})
 
 app.use((req, res, next) => {
     console.log('incoming request to' + req.url);
